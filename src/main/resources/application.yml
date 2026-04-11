@@ -27,7 +27,7 @@ services:
 logging:
   level:
     root: INFO
-    com.stayease.auth_service: DEBUG
+    com.stayease.user_service: DEBUG
     org.springframework.security: DEBUG
     org.springframework.web: INFO
     feign: DEBUG

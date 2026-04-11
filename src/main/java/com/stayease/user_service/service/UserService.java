@@ -1,8 +1,7 @@
 package com.stayease.user_service.service;
 
 
-import com.stayease.user_service.dto.UpdateUserRequest;
-import com.stayease.user_service.dto.UserResponse;
+import com.stayease.user_service.dto.*;
 import com.stayease.user_service.entity.User;
 
 import java.util.List;
@@ -10,12 +9,10 @@ import java.util.List;
 public interface UserService {
 
     UserResponse getUser(Long id);
-
     UserResponse updateUser(Long id, UpdateUserRequest request);
-
-    void addWishlist(Long userId, Long propertyId);
-
-    List<Long> getWishlist(Long userId);
-
+    void addToWishlist(Long Id, WishlistRequest request);
+    List<WishlistResponse> getWishlist(Long userId);
+    void removeFromWishlist(Long userId, WishlistRequest request);
     void createuser(User user);
+    List<BookingHistoryResponse> getBookingHistory(Long Id);
 }

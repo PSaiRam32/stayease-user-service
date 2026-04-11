@@ -1,11 +1,14 @@
 package com.stayease.user_service.dto;
 
 
-import lombok.Data;
+import jakarta.validation.constraints.NotBlank;
+import lombok.*;
 
-@Data
+
+@Getter @Setter
 public class UpdateUserRequest {
 
+    @NotBlank
     private String name;
-
+    private String phone;
 }

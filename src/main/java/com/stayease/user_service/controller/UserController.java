@@ -82,7 +82,7 @@ public class UserController {
 
     @Operation(summary="Get Bookings")
     @PreAuthorize("hasRole('USER')")
-    @GetMapping("/gtbookings/{id}")
+    @GetMapping("/getbookings/{id}")
     public List<BookingHistoryResponse> getBookings(@PathVariable Long Id) {
         logger.info("Getting bookings for user: {}", Id);
         return userService.getBookingHistory(Id);

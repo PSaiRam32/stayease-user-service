@@ -15,7 +15,7 @@ public class Wishlist {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long wishlistId;
     private Long userId;
     private Long propertyId;
     private LocalDateTime createdAt;

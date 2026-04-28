@@ -46,27 +46,27 @@ public class UserServiceImpl implements UserService {
         return mapToResponse(user);
     }
 
-    public void addToWishlist(Long Id, WishlistRequest request) {
-        logger.info("Adding property {} to wishlist for user {}", request.getPropertyId(), Id);
+    public void addToWishlist(Long userId, WishlistRequest request) {
+        logger.info("Adding property {} to wishlist for user {}", request.getPropertyId(), userId);
         // Check if property exists
-        List<Object> properties = propertyClient.getproperties(request.getPropertyId());
+        List<Object> properties = propertyClient.getProperties(request.getPropertyId());
         if (properties.isEmpty()) {
             logger.error("Property {} does not exist", request.getPropertyId());
             throw new PropertyNotFoundException("Property not found");
         }
         // Check if already exists
-        List<Wishlist> existing = wishlistRepository.findByUserId(Id);
+        List<Wishlist> existing = wishlistRepository.findByUserId(userId);
         boolean alreadyExists = existing.stream().anyMatch(w -> w.getPropertyId().equals(request.getPropertyId()));
         if (alreadyExists) {
-            logger.warn("Property {} already in wishlist for user {}", request.getPropertyId(),Id);
+            logger.warn("Property {} already in wishlist for user {}", request.getPropertyId(),userId);
             return;
         }
         Wishlist wishlist = new Wishlist();
-        wishlist.setUserId(Id);
+        wishlist.setUserId(userId);
         wishlist.setPropertyId(request.getPropertyId());
         wishlist.setCreatedAt(LocalDateTime.now());
         wishlistRepository.save(wishlist);
-        logger.info("Successfully added property {} to wishlist for user {}", request.getPropertyId(),Id);
+        logger.info("Successfully added property {} to wishlist for user {}", request.getPropertyId(),userId);
     }
 
     public List<WishlistResponse> getWishlist(Long Id) {
@@ -93,12 +93,21 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void createuser(User user) {
+    public void createUser(User user) {
+//        if (userRepository.existsById(user.getUserid())) {
+//            return;
+//        }
         logger.info("Creating new user: {}", user.getEmail());
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
         logger.info("User created successfully: {}", user.getEmail());
+    }
+
+    public void deleteUser(Long userId) {
+        logger.info("Deleting user: {}", userId);
+        userRepository.deleteById(userId);
+        logger.info("User deleted successfully: {}", userId);
     }
 
 
@@ -125,7 +134,7 @@ public class UserServiceImpl implements UserService {
 
     private UserResponse mapToResponse(User user) {
         return UserResponse.builder()
-                .id(user.getId())
+                .userid(user.getUserid())
                 .name(user.getName())
                 .email(user.getEmail())
                 .phone(user.getPhone())
@@ -138,7 +147,7 @@ public class UserServiceImpl implements UserService {
         response.setPropertyId(wishlist.getPropertyId());
         response.setCreatedAt(wishlist.getCreatedAt());
         // Fetch property details
-        List<Object> properties = propertyClient.getproperties(wishlist.getPropertyId());
+        List<Object> properties = propertyClient.getProperties(wishlist.getPropertyId());
         if (!properties.isEmpty()) {
             response.setPropertyDetails(properties.get(0));
         }

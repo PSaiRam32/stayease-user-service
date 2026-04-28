@@ -14,5 +14,5 @@ import java.util.List;
 public interface PropertyClient {
 
     @GetMapping("/properties/{Id}")
-    List<Object> getproperties(@PathVariable Long propertyId);
+    List<Object> getProperties(@PathVariable Long propertyId);
 }

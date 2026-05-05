@@ -1,5 +1,6 @@
 package com.stayease.user_service.config;
 
+import com.stayease.user_service.dto.PropertyResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,6 +14,6 @@ import java.util.List;
 )
 public interface PropertyClient {
 
-    @GetMapping("/properties/{Id}")
-    List<Object> getProperties(@PathVariable Long propertyId);
+    @GetMapping("/properties/{propertyId}")
+    PropertyResponse getProperties(@PathVariable Long propertyId);
 }

@@ -49,8 +49,8 @@ public class UserServiceImpl implements UserService {
     public void addToWishlist(Long userId, WishlistRequest request) {
         logger.info("Adding property {} to wishlist for user {}", request.getPropertyId(), userId);
         // Check if property exists
-        List<Object> properties = propertyClient.getProperties(request.getPropertyId());
-        if (properties.isEmpty()) {
+        PropertyResponse response = propertyClient.getProperties(request.getPropertyId());
+        if (response == null || response.getData() == null) {
             logger.error("Property {} does not exist", request.getPropertyId());
             throw new PropertyNotFoundException("Property not found");
         }
@@ -114,22 +114,23 @@ public class UserServiceImpl implements UserService {
 
     public List<BookingHistoryResponse> getBookingHistory(Long userId) {
         logger.info("Fetching booking history for user: {}", userId);
-        // Verify user exists
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
         logger.debug("User verified for booking history: {}", userId);
         
-        List<Object> bookings = bookingClient.getUserBookings(userId);
+//        List<Object> bookings = bookingClient.getUserBookings(userId);
+        ApiResponse<List<BookingHistoryResponse>> response = bookingClient.getUserBookings(userId);
+        List<BookingHistoryResponse> bookings = response.getData();
         logger.info("Retrieved {} bookings for user: {}", bookings.size(), userId);
-        
-        return bookings.stream()
-                .map(booking -> {
-                    // Convert booking object to BookingHistoryResponse
-                    // This assumes bookingClient returns booking data as Map or similar
-                    logger.debug("Processing booking for user: {}", userId);
-                    return new BookingHistoryResponse();
-                })
-                .toList();
+        return bookings;
+//        return bookings.stream()
+//                .map(booking -> {
+//                    // Convert booking object to BookingHistoryResponse
+//                    // This assumes bookingClient returns booking data as Map or similar
+//                    logger.debug("Processing booking for user: {}", userId);
+//                    return new BookingHistoryResponse();
+//                })
+//                .toList();
     }
 
     private UserResponse mapToResponse(User user) {
@@ -147,9 +148,9 @@ public class UserServiceImpl implements UserService {
         response.setPropertyId(wishlist.getPropertyId());
         response.setCreatedAt(wishlist.getCreatedAt());
         // Fetch property details
-        List<Object> properties = propertyClient.getProperties(wishlist.getPropertyId());
-        if (!properties.isEmpty()) {
-            response.setPropertyDetails(properties.get(0));
+        PropertyResponse  properties = propertyClient.getProperties(wishlist.getPropertyId());
+        if (properties != null && properties.getData() != null) {
+            response.setPropertyDetails(properties.getData());
         }
         return response;
     }

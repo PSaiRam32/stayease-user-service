@@ -14,14 +14,11 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class BookingHistoryResponse {
-    
+
     private Long bookingId;
-    private Long userId;
+    private String userId;
     private Long propertyId;
-    private String propertyName;
-    private LocalDateTime checkInDate;
-    private LocalDateTime checkOutDate;
-    private Double totalPrice;
+    private Long roomId;
     private String bookingStatus;
-    private LocalDateTime createdAt;
+    private Double totalPrice;
 }

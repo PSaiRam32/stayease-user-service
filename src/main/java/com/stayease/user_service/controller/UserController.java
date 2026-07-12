@@ -1,12 +1,7 @@
 package com.stayease.user_service.controller;
 
 
-import com.stayease.user_service.dto.UpdateUserRequest;
-import com.stayease.user_service.dto.UserResponse;
-import com.stayease.user_service.dto.WishlistRequest;
-import com.stayease.user_service.dto.WishlistResponse;
-import com.stayease.user_service.dto.BookingHistoryResponse;
-import com.stayease.user_service.entity.User;
+import com.stayease.user_service.dto.*;
 import com.stayease.user_service.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,9 +25,15 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/auth-internal")
-    public void createUser(@RequestBody User user){
-        logger.info("Creating new user: {}", user.getEmail());
-        userService.createUser(user);
+    public void createUser(@RequestBody UserProfileRequest request){
+        logger.info("Creating new user: {}", request.getEmail());
+        userService.createUser(request);
+    }
+
+    @PutMapping("/auth-internal/verify/{userId}")
+    public void verifyUser(@PathVariable Long userId,@RequestBody UserVerificationRequest request) {
+        logger.info("Received verification update for user {}", userId);
+        userService.verifyUser(userId, request);
     }
 
     @DeleteMapping("/delete-internal/{userId}")

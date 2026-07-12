@@ -93,15 +93,36 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void createUser(User user) {
+    public void createUser(UserProfileRequest request) {
 //        if (userRepository.existsById(user.getUserid())) {
 //            return;
 //        }
-        logger.info("Creating new user: {}", user.getEmail());
-        user.setCreatedAt(LocalDateTime.now());
-        user.setUpdatedAt(LocalDateTime.now());
+        logger.info("Creating new user: {}", request.getEmail());
+        User user = User.builder()
+                .userid(request.getUserId())
+                .name(request.getName())
+                .email(request.getEmail())
+                .phone(request.getPhone())
+                .role(request.getRole())
+                .isActive(request.isActive())
+                .emailVerified(request.isEmailVerified())
+                .createdAt(request.getCreatedAt())
+                .updatedAt(request.getUpdatedAt())
+                .build();
         userRepository.save(user);
         logger.info("User created successfully: {}", user.getEmail());
+    }
+
+    @Override
+    public void verifyUser(Long userId,UserVerificationRequest request){
+        logger.info("Updating verification status for user {}", userId);
+        User user = userRepository.findById(userId).orElseThrow(() ->
+                        new UserNotFoundException("User not found"));
+        user.setActive(request.isActive());
+        user.setEmailVerified(request.isEmailVerified());
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+        logger.info("User verification status updated successfully");
     }
 
     public void deleteUser(Long userId) {

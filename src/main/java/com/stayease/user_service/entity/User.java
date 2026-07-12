@@ -23,7 +23,9 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role;
     @Builder.Default
-    private boolean isActive = true;
+    private boolean isActive = false;
+    @Builder.Default
+    private boolean emailVerified = false;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

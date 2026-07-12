@@ -1,0 +1,23 @@
+package com.stayease.user_service.dto;
+
+import com.stayease.user_service.entity.Role;
+import lombok.*;
+import java.time.LocalDateTime;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class UserProfileRequest {
+
+    private Long userId;
+    private String name;
+    private String email;
+    private Role role;
+    private String phone;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private boolean active;
+    private boolean emailVerified;
+}

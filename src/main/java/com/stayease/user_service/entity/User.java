@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userid;
     private String name;
     @Column(unique = true)
@@ -26,6 +26,7 @@ public class User {
     private boolean isActive = false;
     @Builder.Default
     private boolean emailVerified = false;
+    private String profileImageUrl;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

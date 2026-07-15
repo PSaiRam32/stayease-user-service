@@ -1,4 +1,4 @@
-package com.stayease.user_service.dto;
+package com.stayease.user_service.dto.Response;
 
 import lombok.Builder;
 import lombok.Data;
@@ -14,4 +14,5 @@ public class UserResponse {
     private String role;
     private String phone;
     private LocalDateTime updatedAt;
+    private String profileImageUrl;
 }

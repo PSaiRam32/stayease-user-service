@@ -26,7 +26,9 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/users/{id}",
-                                "/users/delete-internal/**"
+                                "/users/delete-internal/**",
+                                "/users/profile-picture/{userId}",
+                                "/uploads/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

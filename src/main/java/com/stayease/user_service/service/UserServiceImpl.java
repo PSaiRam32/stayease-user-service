@@ -1,42 +1,50 @@
 package com.stayease.user_service.service;
 
+import com.stayease.user_service.config.AuthClient;
 import com.stayease.user_service.config.BookingClient;
 import com.stayease.user_service.config.PropertyClient;
-import com.stayease.user_service.dto.*;
+import com.stayease.user_service.dto.Request.*;
+import com.stayease.user_service.dto.Response.*;
 import com.stayease.user_service.entity.User;
 import com.stayease.user_service.entity.Wishlist;
 import com.stayease.user_service.exception.PropertyNotFoundException;
 import com.stayease.user_service.exception.UserNotFoundException;
 import com.stayease.user_service.repository.UserRepository;
 import com.stayease.user_service.repository.WishlistRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
     private final UserRepository userRepository;
     private final WishlistRepository wishlistRepository;
     private final BookingClient bookingClient;
     private final PropertyClient propertyClient;
+    private final StorageService storageService;
+    @Value("${file.default-avatar}")
+    private String defaultAvatar;
+    private final AuthClient authClient;
 
 
     public UserResponse getUser(Long id) {
-        logger.info("Retrieving user with id: {}", id);
+        log.info("Retrieving user with id: {}", id);
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         return mapToResponse(user);
     }
 
     public UserResponse updateUser(Long id, UpdateUserRequest request) {
-        logger.info("Updating user: {}", id);
+        log.info("Updating user: {}", id);
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         user.setName(request.getName());
@@ -47,18 +55,18 @@ public class UserServiceImpl implements UserService {
     }
 
     public void addToWishlist(Long userId, WishlistRequest request) {
-        logger.info("Adding property {} to wishlist for user {}", request.getPropertyId(), userId);
+        log.info("Adding property {} to wishlist for user {}", request.getPropertyId(), userId);
         // Check if property exists
         PropertyResponse response = propertyClient.getProperties(request.getPropertyId());
         if (response == null || response.getData() == null) {
-            logger.error("Property {} does not exist", request.getPropertyId());
+            log.error("Property {} does not exist", request.getPropertyId());
             throw new PropertyNotFoundException("Property not found");
         }
         // Check if already exists
         List<Wishlist> existing = wishlistRepository.findByUserId(userId);
         boolean alreadyExists = existing.stream().anyMatch(w -> w.getPropertyId().equals(request.getPropertyId()));
         if (alreadyExists) {
-            logger.warn("Property {} already in wishlist for user {}", request.getPropertyId(),userId);
+            log.warn("Property {} already in wishlist for user {}", request.getPropertyId(),userId);
             return;
         }
         Wishlist wishlist = new Wishlist();
@@ -66,11 +74,11 @@ public class UserServiceImpl implements UserService {
         wishlist.setPropertyId(request.getPropertyId());
         wishlist.setCreatedAt(LocalDateTime.now());
         wishlistRepository.save(wishlist);
-        logger.info("Successfully added property {} to wishlist for user {}", request.getPropertyId(),userId);
+        log.info("Successfully added property {} to wishlist for user {}", request.getPropertyId(),userId);
     }
 
     public List<WishlistResponse> getWishlist(Long Id) {
-        logger.info("Retrieving wishlist for user: {}",Id);
+        log.info("Retrieving wishlist for user: {}",Id);
         return wishlistRepository.findByUserId(Id)
                 .stream()
                 .map(this::mapToWishlistResponse)
@@ -78,7 +86,7 @@ public class UserServiceImpl implements UserService {
     }
 
     public void removeFromWishlist(Long  Id, WishlistRequest request) {
-        logger.info("Removing property {} from wishlist for user {}", request.getPropertyId(), Id);
+        log.info("Removing property {} from wishlist for user {}", request.getPropertyId(), Id);
         List<Wishlist> wishlists = wishlistRepository.findByUserId(Id);
         Wishlist toRemove = wishlists.stream()
                 .filter(w -> w.getPropertyId().equals(request.getPropertyId()))
@@ -86,9 +94,9 @@ public class UserServiceImpl implements UserService {
                 .orElse(null);
         if (toRemove != null) {
             wishlistRepository.delete(toRemove);
-            logger.info("Successfully removed property {} from wishlist for user {}", request.getPropertyId(), Id);
+            log.info("Successfully removed property {} from wishlist for user {}", request.getPropertyId(), Id);
         } else {
-            logger.warn("Property {} not found in wishlist for user {}", request.getPropertyId(), Id);
+            log.warn("Property {} not found in wishlist for user {}", request.getPropertyId(), Id);
         }
     }
 
@@ -97,7 +105,7 @@ public class UserServiceImpl implements UserService {
 //        if (userRepository.existsById(user.getUserid())) {
 //            return;
 //        }
-        logger.info("Creating new user: {}", request.getEmail());
+        log.info("Creating new user: {}", request.getEmail());
         User user = User.builder()
                 .userid(request.getUserId())
                 .name(request.getName())
@@ -110,57 +118,94 @@ public class UserServiceImpl implements UserService {
                 .updatedAt(request.getUpdatedAt())
                 .build();
         userRepository.save(user);
-        logger.info("User created successfully: {}", user.getEmail());
+        log.info("User created successfully: {}", user.getEmail());
     }
 
     @Override
-    public void verifyUser(Long userId,UserVerificationRequest request){
-        logger.info("Updating verification status for user {}", userId);
+    public void verifyUser(Long userId, UserVerificationRequest request){
+        log.info("Updating verification status for user {}", userId);
         User user = userRepository.findById(userId).orElseThrow(() ->
                         new UserNotFoundException("User not found"));
         user.setActive(request.isActive());
         user.setEmailVerified(request.isEmailVerified());
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
-        logger.info("User verification status updated successfully");
+        log.info("User verification status updated successfully");
     }
 
-    public void deleteUser(Long userId) {
-        logger.info("Deleting user: {}", userId);
-        userRepository.deleteById(userId);
-        logger.info("User deleted successfully: {}", userId);
+    @Override
+    @Transactional
+    public void deactivateUser(Long userId){
+        log.info("Deactivation request received for userId: {}", userId);
+        User user=userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found."));
+        if (!user.isActive()){
+            log.warn("User {} is already deactivated.", userId);
+            return;
+        }
+        user.setActive(false);
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+        authClient.deactivateUser(userId, UserDeactivationRequest.builder()
+                        .active(false)
+                        .build());
+        log.info("User account deactivated successfully. UserId: {}", userId);
     }
 
 
 
     public List<BookingHistoryResponse> getBookingHistory(Long userId) {
-        logger.info("Fetching booking history for user: {}", userId);
+        log.info("Fetching booking history for user: {}", userId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
-        logger.debug("User verified for booking history: {}", userId);
+        log.debug("User verified for booking history: {}", userId);
         
 //        List<Object> bookings = bookingClient.getUserBookings(userId);
         ApiResponse<List<BookingHistoryResponse>> response = bookingClient.getUserBookings(userId);
         List<BookingHistoryResponse> bookings = response.getData();
-        logger.info("Retrieved {} bookings for user: {}", bookings.size(), userId);
+        log.info("Retrieved {} bookings for user: {}", bookings.size(), userId);
         return bookings;
 //        return bookings.stream()
 //                .map(booking -> {
 //                    // Convert booking object to BookingHistoryResponse
 //                    // This assumes bookingClient returns booking data as Map or similar
-//                    logger.debug("Processing booking for user: {}", userId);
+//                    log.debug("Processing booking for user: {}", userId);
 //                    return new BookingHistoryResponse();
 //                })
 //                .toList();
     }
 
+    @Override
+    @Transactional
+    public ProfileImageResponse uploadProfileImage(Long userId, MultipartFile file){
+        log.info("Uploading profile image for userId : {}", userId);
+        User user=userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
+        String oldImage=user.getProfileImageUrl();
+        // Upload first
+        String newImage=storageService.uploadProfileImage(userId, file);
+        // Update DB
+        user.setProfileImageUrl(newImage);
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+        // Delete old image only after successful save
+        storageService.deleteProfileImage(oldImage);
+        return ProfileImageResponse.builder()
+                .message("Profile image uploaded successfully.")
+                .imageUrl(newImage)
+                .build();
+    }
+
     private UserResponse mapToResponse(User user) {
+        String profileImageUrl = user.getProfileImageUrl();
+        if(profileImageUrl==null||profileImageUrl.isBlank()){
+            profileImageUrl =defaultAvatar;
+        }
         return UserResponse.builder()
                 .userid(user.getUserid())
                 .name(user.getName())
                 .email(user.getEmail())
                 .phone(user.getPhone())
                 .role(String.valueOf(user.getRole()))
+                .profileImageUrl(profileImageUrl)
                 .build();
     }
 

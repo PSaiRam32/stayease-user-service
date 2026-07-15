@@ -1,4 +1,4 @@
-package com.stayease.user_service.dto;
+package com.stayease.user_service.dto.Request;
 
 import com.stayease.user_service.entity.Role;
 import lombok.*;

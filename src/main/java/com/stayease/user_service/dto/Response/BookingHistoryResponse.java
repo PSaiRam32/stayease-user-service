@@ -1,12 +1,10 @@
-package com.stayease.user_service.dto;
+package com.stayease.user_service.dto.Response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.LocalDateTime;
 
 @Getter
 @Setter
